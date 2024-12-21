@@ -10,6 +10,8 @@ from pydub import AudioSegment
 import time
 import spacy
 
+capitalize_next=False
+
 nlp = spacy.load("en_core_web_sm")
 
 # Initialize the speech recognizer
@@ -242,6 +244,12 @@ class StartStopApp:
         # Return the processed audio as raw data
         return audio_segment.raw_data
 
+    def delete_last_word():
+        """Simulates deleting the last word typed."""
+        # Use clipboard to retrieve current text in the active field
+        pyautogui.hotkey("ctrl", "shift", "left")  # Select the last word
+        pyautogui.press("backspace")
+
     def punctuation(self, text):
         """Use spaCy to add punctuation and structure to the recognized text."""
         doc = nlp(text)
@@ -289,7 +297,28 @@ class StartStopApp:
             "symbol hyphen": "-"
         }
 
-        # Replace each specific trigger word with its corresponding symbol
+        
+        action_map = {
+            "press enter": "enter",
+            "press delete": "backspace",
+            "Press enter": "enter",
+            "Press delete": "backspace"
+        }
+
+        global capitalize_next
+
+        for keyword, action in action_map.items():
+            if keyword in text.lower():
+                if action == "backspace":
+                    delete_last_word()
+                elif action == "enter":
+                    pyautogui.press(action)
+                    capitalize_next=True
+
+                # Remove the keyword from the text but preserve other parts of the input
+                text = text.lower().replace(keyword, "").strip()
+
+        # Replace special symbols
         for keyword, symbol in symbol_map.items():
             text = text.replace(keyword, symbol)
 
@@ -297,7 +326,11 @@ class StartStopApp:
 
     def write_to_text_space(self, text):
         """Function to simulate typing the speech-to-text output into any active text field."""
+        global capitalize_next
         if text:
+            if capitalize_next:
+                text = text[0].upper() + text[1:] if text else text
+                capitalize_next = False  # Reset the flag after capitalizing
             pyautogui.write(text)  # Simulate typing the text in the active window
 
     def copy_to_clipboard(self, text):
