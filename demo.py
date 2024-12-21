@@ -45,7 +45,32 @@ while True:
 
         # Move the mouse to the new position (adjust sensitivity)
         pyautogui.moveTo(center_x + screen_x * sensi_h, center_y + screen_y * sensi_v)
-        print(f"Cursor position: {screen_x}, {screen_y}")
+
+        # Check for left eye wink (landmark indices 159 and 145 for upper and lower eyelid)
+        left_upper_lid = landmarks[159]
+        left_lower_lid = landmarks[145]
+
+        # Calculate the vertical distance between upper and lower eyelid for the left eye
+        left_eye_dist = abs(left_upper_lid.y - left_lower_lid.y)
+
+        # Trigger a left click if the left eye distance is below the threshold
+        if left_eye_dist < 0.01:
+            
+            pyautogui.click()
+            pyautogui.sleep(.5)  # Pause to avoid multiple clicks
+
+        # Check for right eye wink (landmark indices 386 and 374 for upper and lower eyelid)
+        right_upper_lid = landmarks[386]
+        right_lower_lid = landmarks[374]
+
+        # Calculate the vertical distance between upper and lower eyelid for the right eye
+        right_eye_dist = abs(right_upper_lid.y - right_lower_lid.y)
+
+        # Trigger a right click if the right eye distance is below the threshold
+        if right_eye_dist < 0.01:
+            
+            pyautogui.click(button='right')
+            pyautogui.sleep(.5)  # Pause to avoid multiple clicks
 
     # Show the frame with the landmarks and the cursor position
     cv2.imshow('Nose Tip Controlled Mouse', frame)
