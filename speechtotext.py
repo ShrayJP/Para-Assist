@@ -2,10 +2,8 @@ import speech_recognition as sr
 import pyautogui
 import pyperclip
 from pydub import AudioSegment
-import io
-import time
-from pydub.utils import which
 import spacy
+from pydub.utils import which
 
 # Set up spaCy
 nlp = spacy.load("en_core_web_sm")
@@ -39,7 +37,7 @@ def add_punctuation(text):
     punctuated_text = []
 
     # Define question words
-    question_words = {"who", "what", "how", "why", "where", "when", "do", "is", "are","can","couldn't","wouldn't","may"}
+    question_words = {"who", "what", "how", "why", "where", "when", "do", "is", "are", "can", "couldn't", "wouldn't", "may"}
 
     # Iterate through sentences detected by spaCy
     for sent in doc.sents:
@@ -59,6 +57,30 @@ def add_punctuation(text):
 
     # Combine sentences into a single string with spaces
     return " ".join(punctuated_text)
+
+def replace_special_symbols(text):
+    """Replace predefined keywords with special symbols only in specified contexts."""
+    symbol_map = {
+        "symbol at": "@",
+        "symbol hash": "#",
+        "symbol dollar": "$",
+        "symbol percent": "%",
+        "symbol ampersand": "&",
+        "symbol star": "*",
+        "symbol plus": "+",
+        "symbol minus": "-",
+        "symbol equals": "=",
+        "symbol underscore": "_",
+        "symbol slash": "/",
+        "symbol back": "\\",
+        "symbol hyphen": "-"
+    }
+
+    # Replace each specific trigger word with its corresponding symbol
+    for keyword, symbol in symbol_map.items():
+        text = text.replace(keyword, symbol)
+    
+    return text
 
 def write_to_text_space(text):
     """Function to simulate typing the speech-to-text output into any active text field."""
@@ -83,7 +105,7 @@ def real_time_recognition():
             try:
                 # Listen for audio input
                 print("Listening...")
-                audio = r.listen(source, timeout=3, phrase_time_limit=7)
+                audio = r.listen(source, timeout=3, phrase_time_limit=10)
                 print("Processing...")
 
                 # Apply noise reduction to the raw audio data
@@ -97,13 +119,17 @@ def real_time_recognition():
 
                 # Add punctuation and grammar correction using spaCy
                 punctuated_text = add_punctuation(text)
-                print(f"Processed text: {punctuated_text}")
+
+                # Replace special symbols based on specific triggers
+                final_text = replace_special_symbols(punctuated_text)
+
+                print(f"Processed text: {final_text}")
 
                 # Write the recognized text into the active text field or application
-                write_to_text_space(punctuated_text)
+                write_to_text_space(final_text)
 
                 # Optionally, copy the recognized text to the clipboard
-                copy_to_clipboard(punctuated_text)
+                copy_to_clipboard(final_text)
 
             except sr.UnknownValueError:
                 print("Sorry, I did not understand that.")
