@@ -33,6 +33,7 @@ eye_closed_start_time = 0
 eye_closed_threshold = 1  # Time in seconds to start dragging if the left eye is closed
 left_eye_clicked = False  # Flag to track if left click was already triggered
 mouse_down_flag = False  # Flag to prevent left click while mouse is down
+mouse_down_triggered = False  # Flag to prevent multiple mouseDown actions during dragging
 
 while True:
     _, frame = cam.read()
@@ -95,11 +96,12 @@ while True:
         # Prevent clicks when both eyes are closed
         if not (right_eye_dist < 0.008 and left_eye_dist < 0.008):
             if left_eye_dist < 0.008:
-                if not left_eye_clicked and not mouse_down_flag:  # Prevent left click while mouse is down
+                if not left_eye_clicked:  # Prevent left click while mouse is down
                     # Trigger the left click immediately when the left eye is closed (only once)
-                    pyautogui.click()  # Perform a left click, but not mouseDown
-                    left_eye_clicked = True  # Mark that the click has been triggered
-                    print("Left click triggered.")
+                    if not mouse_down_flag :
+                        pyautogui.click()  # Perform a left click, but not mouseDown
+                        left_eye_clicked = True  # Mark that the click has been triggered
+                        print("Left click triggered.")
 
                     # Sleep for 0.7 seconds before checking for drag
                     time.sleep(0.7)
@@ -121,12 +123,25 @@ while True:
                         # If the left eye is still closed, start dragging
                         dragging = True
                         drag_start_x, drag_start_y = smoothed_screen_x, smoothed_screen_y
-                        pyautogui.mouseDown(smoothed_screen_x, smoothed_screen_y)  # Press the mouse down
-                        mouse_down_flag = True  # Set the flag to prevent left click while dragging
+                        if not mouse_down_triggered:
+                            pyautogui.mouseDown(smoothed_screen_x, smoothed_screen_y)  # Press the mouse down
+                            mouse_down_flag = True  # Set the flag to prevent left click while dragging
+                            mouse_down_triggered = True  # Set the flag to prevent multiple mouseDown actions
                         print("Mouse down triggered after 0.7 seconds.")
 
             else:
                 # Only stop dragging and release mouse if the left eye is fully open
+                _, frame = cam.read()
+                frame = cv2.flip(frame, 1)  # Flip frame horizontally
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                output = face_mesh.process(rgb_frame)
+                landmark_points = output.multi_face_landmarks
+                if landmark_points:
+                    landmarks = landmark_points[0].landmark
+                    left_upper_lid = landmarks[159]
+                    left_lower_lid = landmarks[145]
+                    left_eye_dist = abs(left_upper_lid.y - left_lower_lid.y)
+                
                 if left_eye_dist > 0.008:
                     if dragging:
                         dragging = False  # Stop dragging when the left eye is open
@@ -134,6 +149,7 @@ while True:
                         print("Mouse released.")
                         pyautogui.moveTo(smoothed_screen_x, smoothed_screen_y)  # Ensure mouse stops moving
                         mouse_down_flag = False  # Reset the flag when the mouse is released
+                        mouse_down_triggered = False  # Reset the flag to allow another mouse down
 
                 # Reset the left click flag when the left eye opens
                 left_eye_clicked = False
