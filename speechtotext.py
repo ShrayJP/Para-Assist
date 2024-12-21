@@ -4,6 +4,13 @@ import pyperclip
 from pydub import AudioSegment
 import io
 import time
+from pydub.utils import which
+import spacy
+
+# Set up spaCy
+nlp = spacy.load("en_core_web_sm")
+
+AudioSegment.converter = which("ffmpeg")
 
 # Initialize the recognizer
 r = sr.Recognizer()
@@ -24,6 +31,35 @@ def remove_noise(audio_data):
     # Return the processed audio as raw data
     return audio_segment.raw_data
 
+def add_punctuation(text):
+    """Use spaCy to add punctuation and structure to the recognized text."""
+    doc = nlp(text)
+
+    # Prepare a list to hold the punctuated sentences
+    punctuated_text = []
+
+    # Define question words
+    question_words = {"who", "what", "how", "why", "where", "when", "do", "is", "are","can","couldn't","wouldn't","may"}
+
+    # Iterate through sentences detected by spaCy
+    for sent in doc.sents:
+        sentence_text = sent.text.strip()
+
+        # Check if the sentence seems like a question by examining the last word
+        if sentence_text.lower().split()[0] in question_words:
+            if not sentence_text.endswith('?'):
+                sentence_text += '?'  # Add question mark if not already there
+        else:
+            # Ensure it ends with a period if no question mark is detected
+            if sentence_text and sentence_text[-1] not in [".", "?", "!"]:
+                sentence_text += "."
+                
+        sentence_text = sentence_text[0].upper() + sentence_text[1:]
+        punctuated_text.append(sentence_text)
+
+    # Combine sentences into a single string with spaces
+    return " ".join(punctuated_text)
+
 def write_to_text_space(text):
     """Function to simulate typing the speech-to-text output into any active text field."""
     if text:
@@ -43,11 +79,11 @@ def real_time_recognition():
         # Adjust the recognizer sensitivity to ambient noise (background noise)
         r.adjust_for_ambient_noise(source, duration=1)  # Adjust sensitivity over 1 second
 
-        print("Listening...")
         while True:
             try:
                 # Listen for audio input
-                audio = r.listen(source, timeout=3, phrase_time_limit=5)
+                print("Listening...")
+                audio = r.listen(source, timeout=3, phrase_time_limit=7)
                 print("Processing...")
 
                 # Apply noise reduction to the raw audio data
@@ -58,13 +94,16 @@ def real_time_recognition():
 
                 # Convert speech to text using Google Web Speech API
                 text = r.recognize_google(audio_file)
-                print(f"You said: {text}")
+
+                # Add punctuation and grammar correction using spaCy
+                punctuated_text = add_punctuation(text)
+                print(f"Processed text: {punctuated_text}")
 
                 # Write the recognized text into the active text field or application
-                write_to_text_space(text)
+                write_to_text_space(punctuated_text)
 
                 # Optionally, copy the recognized text to the clipboard
-                copy_to_clipboard(text)
+                copy_to_clipboard(punctuated_text)
 
             except sr.UnknownValueError:
                 print("Sorry, I did not understand that.")
