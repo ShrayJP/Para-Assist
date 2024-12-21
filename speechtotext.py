@@ -1,24 +1,21 @@
 import speech_recognition as sr
-import pyttsx3
 import pyautogui
+import pyperclip
 import time
 
-# Initialize the recognizer and text-to-speech engine
+# Initialize the recognizer
 r = sr.Recognizer()
-engine = pyttsx3.init()
-
-def output_text(text):
-    """Function to convert text to speech and output ihello what are you sayingyou are not gayt."""
-    if text:
-        print(f"Outputting text: {text}")
-        engine.say(text)  # Convert text to speech
-        engine.runAndWait()  # Run the speech engine
 
 def write_to_text_space(text):
     """Function to simulate typing the speech-to-text output into any active text field."""
     if text:
         pyautogui.write(text)  # Simulate typing the text in the active window
-    
+
+def copy_to_clipboard(text):
+    """Function to copy the recognized text to the clipboard."""
+    if text:
+        pyperclip.copy(text)  # Copy the recognized text to clipboard
+        print(f"Text copied to clipboard: {text}")
 
 def real_time_recognition():
     """Function to continuously listen to the microphone and process speech."""
@@ -31,18 +28,18 @@ def real_time_recognition():
             try:
                 # Listen for speech
                 print("Listening...")
-                audio = r.listen(source, timeout=2, phrase_time_limit=5)  # Adjust timeout & phrase_time_limit
+                audio = r.listen(source, timeout=3, phrase_time_limit=5)  # Adjust timeout & phrase_time_limit
                 print("Processing...")
 
                 # Convert speech to text using Google Web Speech API
                 text = r.recognize_google(audio)
                 print(f"You said: {text}")
                 
-                # Output text using text-to-speech
-                output_text(text)
-                
                 # Write the recognized text into the active text field or application
                 write_to_text_space(text)
+                
+                # Optionally, copy the recognized text to the clipboard
+                copy_to_clipboard(text)
 
             except sr.UnknownValueError:
                 # Error: speech was unintelligible
