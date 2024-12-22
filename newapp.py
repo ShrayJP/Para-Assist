@@ -1,5 +1,5 @@
 import customtkinter as ctk
-
+import tkinter as tk
 ctk.set_appearance_mode("System")  # Use the system appearance mode (light/dark)
 ctk.set_default_color_theme("blue")  # Set the default color theme to blue
 
@@ -8,6 +8,9 @@ class ModernApp:
         self.root = root
         self.root.title("Hack For Tomorrow")
         
+        #image=ctk.CtkImage(file="1734823780393.png")
+       # label=ctk.CTkLabel(app,image=image,text="")
+       # label.pack(pady=20)
         # Set window size and center the window on the screen
         self.root.geometry("400x500")
         self.root.eval('tk::PlaceWindow . center')  # Center the window
@@ -28,12 +31,12 @@ class ModernApp:
         
         # Create and configure the scrollbar (left side)
         self.scrollbar = ctk.CTkScrollbar(self.text_frame, orientation="vertical")
-        self.scrollbar.grid(row=0, column=0, sticky="ns", padx=(10, 0))  # Scrollbar is placed on the left
+        self.scrollbar.grid(row=0, column=0, sticky="ns", padx=(10, 10),pady=(10,10))  # Scrollbar is placed on the left
 
         # Create and configure the text widget (right side of the scrollbar)
         self.text_widget = ctk.CTkTextbox(self.text_frame, wrap="word", yscrollcommand=self.scrollbar.set, font=("Arial", 12))
         self.text_widget.insert("0.0", """This system allows hands-free computer interaction using eye gestures and voice commands. It includes features like eye movement-based mouse control, voice-to-text input, and easy insertion of special symbols through voice commands.
-
+        
 Features:
 Eye Navigation (Mouse Control)
 
@@ -100,7 +103,7 @@ Description: Converts text to speech (offline).""")
         # Adjust the height of the text frame and text widget
         self.text_frame.configure(height=window_height - 140)  # Leave space for heading and button
         self.text_widget.configure(height=window_height - 140)  # Adjust height dynamically with window size
-        self.text_widget.configure(width=window_width - 60)  # Adjust width dynamically with window size (subtracting space for scrollbar)
+        self.text_widget.configure(width=window_width - 200)  # Adjust width dynamically with window size (subtracting space for scrollbar)
 
 if __name__ == "__main__":
     app = ctk.CTk()  # create window
